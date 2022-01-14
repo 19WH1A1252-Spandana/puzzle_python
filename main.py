@@ -350,3 +350,4 @@ def resetAnimation(board, allMoves):
 
 if __name__ == '__main__':
     main()
+    #done...
