@@ -1,11 +1,11 @@
 import pygame, sys, random
 from pygame.locals import *
-import string
+
 
 BOARDWIDTH = 5
 BOARDHEIGHT = 5
 TILESIZE = 100
-WINDOWWIDTH = 720
+WINDOWWIDTH = 1460
 WINDOWHEIGHT = 800
 FPS = 30
 BLANK = None
@@ -17,11 +17,13 @@ BRIGHTBLUE =    (  0,  50, 255)
 DARKTURQUOISE = (  3,  54,  73)
 AQUA =         (  0, 128,   128)
 
+
 BGCOLOR = DARKTURQUOISE
 TILECOLOR = AQUA
 TEXTCOLOR = WHITE
 BORDERCOLOR = BRIGHTBLUE
 BASICFONTSIZE = 20
+
 
 BUTTONCOLOR = WHITE
 BUTTONTEXTCOLOR = BLACK
@@ -30,36 +32,49 @@ MESSAGECOLOR = WHITE
 XMARGIN = int((WINDOWWIDTH - (TILESIZE * BOARDWIDTH + (BOARDWIDTH - 1))) / 2)
 YMARGIN = int((WINDOWHEIGHT - (TILESIZE * BOARDHEIGHT + (BOARDHEIGHT - 1))) / 2)
 
+
+textX = WINDOWWIDTH - 600
+textY = WINDOWHEIGHT - 100
+
 UP = 'up'
 DOWN = 'down'
 LEFT = 'left'
 RIGHT = 'right'
 
 def main():
-    global FPSCLOCK, DISPLAYSURF, BASICFONT, RESET_SURF, RESET_RECT, NEW_SURF, NEW_RECT, SOLVE_SURF, SOLVE_RECT,  MOVECOUNT_SURF , MOVECOUNT_RECT
+    global FPSCLOCK, DISPLAYSURF, BASICFONT, RESET_SURF, RESET_RECT, NEW_SURF, NEW_RECT, SOLVE_SURF, SOLVE_RECT,  TOTALMOVES_SURF , TOTALMOVES_RECT,MOVES,MOVES_RECT,MOVES_SURF
 
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
     DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
     pygame.display.set_caption('Slide Puzzle')
-    BASICFONT = pygame.font.SysFont('Verdana.ttf', 30)
-
-    RESET_SURF, RESET_RECT = makeText('Reset',    TEXTCOLOR, TILECOLOR, WINDOWWIDTH - 120, WINDOWHEIGHT - 90)
-    NEW_SURF,   NEW_RECT   = makeText('New Game', TEXTCOLOR, TILECOLOR, WINDOWWIDTH - 120, WINDOWHEIGHT - 60)
-    SOLVE_SURF, SOLVE_RECT = makeText('Solve',    TEXTCOLOR, TILECOLOR, WINDOWWIDTH - 120, WINDOWHEIGHT - 30)
-    MOVECOUNT_SURF , MOVECOUNT_RECT = makeText('MovesCount = ', TEXTCOLOR,TILECOLOR,WINDOWWIDTH - 400,WINDOWHEIGHT-50)
-
+    BASICFONT = pygame.font.SysFont('Verdana.ttf', 60)
+    NEW_SURF, NEW_RECT = makeText('New Game', TEXTCOLOR, TILECOLOR, 100, 100)
+    RESET_SURF, RESET_RECT = makeText('Reset',    TEXTCOLOR, TILECOLOR, 100,170)
+    SOLVE_SURF, SOLVE_RECT = makeText('Solve',    TEXTCOLOR, TILECOLOR, 100,240)
+    TOTALMOVES_SURF , TOTALMOVES_RECT = makeText('TOTAL MOVES = 50', TEXTCOLOR,TILECOLOR,WINDOWWIDTH - 1260,WINDOWHEIGHT-100)
+    MOVES_SURF, MOVES_RECT = makeText('MOVES = ', TEXTCOLOR, TILECOLOR,WINDOWWIDTH - 800,WINDOWHEIGHT - 100)
+    TOTALMOVES = 50
     mainBoard, solutionSeq = generateNewPuzzle(80)
     SOLVEDBOARD = getStartingBoard()
     allMoves = []
-
+    MOVES = 0
 
     while True:
         slideTo = None
         msg = 'Click tile or press arrow keys to slide.'
         if mainBoard == SOLVEDBOARD:
+
+            pygame.display.set_mode((500,150))
+            pygame.display.set_caption('Solved')
             msg = 'Solved!'
 
+        drawBoard(mainBoard, msg)
+
+        if(len(allMoves) == TOTALMOVES):
+            pygame.display.set_mode((600, 150))
+            pygame.display.set_caption('Game Over')
+            msg = 'GAMEOVER !!!  You Lost'
         drawBoard(mainBoard, msg)
 
         checkForQuit()
@@ -71,12 +86,15 @@ def main():
                     if RESET_RECT.collidepoint(event.pos):
                         resetAnimation(mainBoard, allMoves)
                         allMoves = []
+                        MOVES = 0
                     elif NEW_RECT.collidepoint(event.pos):
                         mainBoard, solutionSeq = generateNewPuzzle(80)
                         allMoves = []
+                        MOVES = 0
                     elif SOLVE_RECT.collidepoint(event.pos):
                         resetAnimation(mainBoard, solutionSeq + allMoves)
                         allMoves = []
+                        MOVES = 0
                 else:
 
 
@@ -109,8 +127,14 @@ def main():
             slideAnimation(mainBoard, slideTo, 'Click tile or press arrow keys to slide.', 8)
             makeMove(mainBoard, slideTo)
             allMoves.append(slideTo)
+            MOVES += 1
+        value = BASICFONT.render("  " + str(MOVES), True, (255, 255, 255))
+        DISPLAYSURF.blit(value, (textX, textY))
         pygame.display.update()
         FPSCLOCK.tick(FPS)
+
+
+
 
 def terminate():
     pygame.quit()
@@ -124,6 +148,7 @@ def checkForQuit():
         if event.key == K_ESCAPE:
             terminate()
         pygame.event.post(event)
+
 
 
 def getStartingBoard():
@@ -248,7 +273,8 @@ def drawBoard(board, message):
     DISPLAYSURF.blit(RESET_SURF, RESET_RECT)
     DISPLAYSURF.blit(NEW_SURF, NEW_RECT)
     DISPLAYSURF.blit(SOLVE_SURF, SOLVE_RECT)
-    DISPLAYSURF.blit(MOVECOUNT_SURF,MOVECOUNT_RECT)
+    DISPLAYSURF.blit(TOTALMOVES_SURF,TOTALMOVES_RECT)
+    DISPLAYSURF.blit(MOVES_SURF,MOVES_RECT)
 
 def slideAnimation(board, direction, message, animationSpeed):
 
@@ -287,9 +313,11 @@ def slideAnimation(board, direction, message, animationSpeed):
 
 
 def generateNewPuzzle(numSlides):
+
     sequence = []
     board = getStartingBoard()
     drawBoard(board, '')
+    pygame.display.set_mode((1460,800))
     pygame.display.update()
     pygame.time.wait(500)
     lastMove = None
@@ -317,6 +345,7 @@ def resetAnimation(board, allMoves):
             oppositeMove = RIGHT
         slideAnimation(board, oppositeMove, '', animationSpeed=int(TILESIZE / 2))
         makeMove(board, oppositeMove)
+
 
 
 if __name__ == '__main__':
