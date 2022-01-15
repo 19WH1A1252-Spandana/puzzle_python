@@ -317,6 +317,7 @@ def generateNewPuzzle(numSlides):
     sequence = []
     board = getStartingBoard()
     drawBoard(board, '')
+    pygame.display.set_caption('Slide Puzzle')
     pygame.display.set_mode((1460,800))
     pygame.display.update()
     pygame.time.wait(500)
